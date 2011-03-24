@@ -17,21 +17,16 @@ class NewsItem < ActiveRecord::Base
   # If you're using a named scope that includes a changing variable you need to wrap it in a lambda
   # This avoids the query being cached thus becoming unaffected by changes (i.e. Time.now is constant)
   scope :published, lambda {
-    where( "publish_date < ?", Time.now )
+    where( "publish_date < ?", Time.now ).joins(:translations).includes(:translations).where(
+      :id => NewsItem::Translation.where(:locale => Globalize.locale).map(&:news_item_id)
+      )
   }
   scope :latest, lambda { |*l_params|
-    published.limit( l_params.first || 10)
+    published.limit( l_params.first || 10).joins(:translations).includes(:translations).where(
+      :id => NewsItem::Translation.where(:locale => Globalize.locale).map(&:news_item_id)
+      )
   }
-
-  # rejects any page that has not been translated to the current locale.
-  scope :translated, lambda {
-    pages = Arel::Table.new(NewsItem.table_name)
-    translations = Arel::Table.new(NewsItem.translations_table_name)
-
-    includes(:translations).where(
-      translations[:locale].eq(Globalize.locale)).where(pages[:id].eq(translations[:news_item_id]))
-  }
-
+  
   def not_published? # has the published date not yet arrived?
     publish_date > Time.now
   end
