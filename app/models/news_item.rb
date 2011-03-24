@@ -22,9 +22,7 @@ class NewsItem < ActiveRecord::Base
       )
   }
   scope :latest, lambda { |*l_params|
-    published.limit( l_params.first || 10).joins(:translations).includes(:translations).where(
-      :id => NewsItem::Translation.where(:locale => Globalize.locale).map(&:news_item_id)
-      )
+    published.limit( l_params.first || 10)
   }
   
   def not_published? # has the published date not yet arrived?
