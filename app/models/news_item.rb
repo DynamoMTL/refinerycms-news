@@ -17,10 +17,9 @@ class NewsItem < ActiveRecord::Base
   # If you're using a named scope that includes a changing variable you need to wrap it in a lambda
   # This avoids the query being cached thus becoming unaffected by changes (i.e. Time.now is constant)
   scope :published, lambda {
-    where( "publish_date < ?", Time.now ).joins(:translations).includes(:translations).where(
-      :id => NewsItem::Translation.where(:locale => Globalize.locale).map(&:news_item_id)
-      )
+    where( "publish_date < ? AND locale = ?", Time.now, Globalize.locale).joins(:translations)
   }
+
   scope :latest, lambda { |*l_params|
     published.limit( l_params.first || 10)
   }
